@@ -1,0 +1,49 @@
+<html>
+	<head>
+		<title>Admin Login</title>
+		<link rel="icon" href="">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<script src="/cdn/bcrypt.min.js" integrity="sha256-r9S9KZvN5nEN1voCkVbj4RdMSLwAa4qeujL5ZOWSN4M=" crossorigin="anonymous"></script>
+		<link href="/cdn/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
+		<script src="/cdn/bootstrap.bundle.min.js" integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN" crossorigin="anonymous"></script>
+		<script src="/cdn/jquery.min.js" integrity="sha256-pvPw+upLPUjgMXY0G+8O0xUf+/Im1MZjXxxgOcBQBXU=" crossorigin="anonymous"></script>
+	</head>
+	<body>
+		<div class="container">
+			<div class="row">
+				<div class="col-sm">
+					<center><h1>Admin Login</h1></center>
+					<br><br>
+					<form id="form-login" action="/ok???" onSubmit="return on_submit();" method="post">
+						<div class="form-row">
+							<div class="col">
+								<input type="text" class="form-control" placeholder="Username" name="username" required>
+							</div>
+							<div class="col">
+								<input id="login-password" type="password" class="form-control" placeholder="Password" name="password" required>
+							</div>
+						</div>
+						<div class="form-row">
+							<button type="submit" class="btn btn-primary">Admin Login</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+		<script>
+			function on_submit() {
+				let form = document.getElementById( "form-login" );
+				let plaintext = document.getElementById( "login-password" );
+				const bcrypt = dcodeIO.bcrypt;
+				const salt = bcrypt.genSaltSync( 10 );
+				const bcrypted = bcrypt.hashSync( plaintext.value , salt );
+				plaintext.value = bcrypted;
+				form.submit();
+			}
+			document.addEventListener( "DOMContentLoaded" , function() {
+				let form = document.getElementById( "form-login" );
+				form.action = window.location.href;
+			});
+		</script>
+	</body>
+</html>

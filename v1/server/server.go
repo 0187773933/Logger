@@ -24,13 +24,26 @@ type Server struct {
 var log *logrus.Logger
 
 func ( s *Server ) LogRequest( context *fiber.Ctx ) ( error ) {
-	// time_string := s.GetFormattedTimeString()
 	ip_address := context.Get( "x-forwarded-for" )
 	if ip_address == "" { ip_address = context.IP() }
 	c_method := context.Method()
 	c_path := context.Path()
-	if strings.Contains( c_path , "favicon" ) {
+	// c_route := context.Route()
+	// fmt.Println( c_route.Path )
+	// fmt.Println( c_method )
+	// fmt.Println( c_path )
+	// c_handlers := c_route.Handlers
+	if strings.HasPrefix( c_path , fmt.Sprintf( "/%s/favicon" , s.Config.ServerUrlPrefix ) ) {
 		return context.Next()
+	}
+	// avoids double store in global log
+	if strings.HasPrefix( c_path , fmt.Sprintf( "/%s/log/c/" , s.Config.ServerUrlPrefix ) ) {
+		if strings.Contains( c_path , "/view" ) == false {
+			time_string := s.GetFormattedTimeString()
+			log_message := fmt.Sprintf( "%s === %s === %s === %s , skipping global log storage" , time_string , ip_address , c_method , c_path )
+			fmt.Println( log_message )
+			return context.Next()
+		}
 	}
 	log_message := fmt.Sprintf( "%s === %s === %s" , ip_address , c_method , c_path )
 	// fmt.Println( log_message )

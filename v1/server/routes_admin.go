@@ -109,6 +109,6 @@ func ( s *Server ) SetupAdminRoutes() {
 	admin.Use( s.ValidateAdminMW )
 	admin.Get( "/log/:message" , s.LogMessage )
 	admin.Get( "/log/view/:count" , s.GetLogMessages )
-	admin.Get( "/log/:key/:message" , s.LogMessageWithKey )
-	admin.Get( "/log/:key/view/:count" , s.GetLogMessagesWithKey )
+	admin.Get( "/log/c/:key/:message" , s.LogMessageWithKey )
+	admin.Get( "/log/c/:key/view/:count" , s.GetLogMessagesWithKey )
 }

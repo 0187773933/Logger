@@ -35,7 +35,7 @@ func FormatTime( input_time *time.Time ) ( result string ) {
 
 // https://github.com/boltdb/bolt#autoincrementing-integer-for-the-bucket
 // itob returns an 8-byte big endian representation of v.
-func itob( v uint64 ) []byte {
+func ItoB( v uint64 ) []byte {
     b := make( []byte , 8 )
     binary.BigEndian.PutUint64( b , uint64( v ) )
     return b
@@ -127,7 +127,7 @@ func ( w *CustomLogrusWriter ) Write( p []byte ) ( n int , err error ) {
 	DB.Update( func( tx *bolt_api.Tx ) error {
 		uuid_bucket := tx.Bucket( LogKeyBytes )
 		sequence_id  , _ := uuid_bucket.NextSequence()
-		sequence_id_b := itob( sequence_id )
+		sequence_id_b := ItoB( sequence_id )
 		// fmt.Println( "next sequence id" , sequence_id )
 		if Encrypting {
 			p_e := encryption.ChaChaEncryptBytes( Config.EncryptionKey , p )
@@ -159,6 +159,14 @@ func CloseDB() {
 		if err != nil {
 			Log.Fatalf( "Failed to close database: %v" , err )
 		}
+	}
+}
+
+func GetDB() ( *bolt_api.DB ) {
+	if DB != nil {
+		return DB
+	} else {
+		return nil
 	}
 }
 

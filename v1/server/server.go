@@ -3,6 +3,7 @@ package server
 import (
 	"fmt"
 	"time"
+	"strings"
 	logrus "github.com/sirupsen/logrus"
 	logger "github.com/0187773933/Logger/v1/logger"
 	types "github.com/0187773933/Logger/v1/types"
@@ -26,7 +27,12 @@ func ( s *Server ) LogRequest( context *fiber.Ctx ) ( error ) {
 	// time_string := s.GetFormattedTimeString()
 	ip_address := context.Get( "x-forwarded-for" )
 	if ip_address == "" { ip_address = context.IP() }
-	log_message := fmt.Sprintf( "%s === %s === %s" , ip_address , context.Method() , context.Path() )
+	c_method := context.Method()
+	c_path := context.Path()
+	if strings.Contains( c_path , "favicon" ) {
+		return context.Next()
+	}
+	log_message := fmt.Sprintf( "%s === %s === %s" , ip_address , c_method , c_path )
 	// fmt.Println( log_message )
 	log.Info( log_message )
 	// TODO : append to bolt ?

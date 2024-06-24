@@ -23,11 +23,12 @@ type Server struct {
 var log *logrus.Logger
 
 func ( s *Server ) LogRequest( context *fiber.Ctx ) ( error ) {
-	time_string := s.GetFormattedTimeString()
+	// time_string := s.GetFormattedTimeString()
 	ip_address := context.Get( "x-forwarded-for" )
 	if ip_address == "" { ip_address = context.IP() }
-	log_message := fmt.Sprintf( "%s === %s === %s === %s" , time_string , ip_address , context.Method() , context.Path() )
-	fmt.Println( log_message )
+	log_message := fmt.Sprintf( "%s === %s === %s" , ip_address , context.Method() , context.Path() )
+	// fmt.Println( log_message )
+	log.Info( log_message )
 	// TODO : append to bolt ?
 	return context.Next()
 }
@@ -39,9 +40,10 @@ func ( s *Server ) Start() {
 	fmt.Printf( "Admin API Key === %s\n" , s.Config.ServerAPIKey )
 	local_ip_addresses := utils.GetLocalIPAddresses()
 	for _ , ip_address := range local_ip_addresses {
-		fmt.Printf( "Listening on http://%s:%s\n" , ip_address , s.Config.ServerPort )
+		fmt.Sprintf( "Listening @ http://%s:%s\n" , ip_address , s.Config.ServerPort )
 	}
 	listen_address := fmt.Sprintf( ":%s" , s.Config.ServerPort )
+	log.Info( fmt.Sprintf( "Listening @ %s" , listen_address ) )
 	s.FiberApp.Listen( listen_address )
 }
 

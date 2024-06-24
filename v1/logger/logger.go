@@ -7,8 +7,10 @@ import (
 	"io"
 	"time"
 	// "encoding/json"
-	// bolt_api "github.com/boltdb/bolt"
+	binary "encoding/binary"
+	bolt_api "github.com/boltdb/bolt"
 	types "github.com/0187773933/Logger/v1/types"
+	encryption "github.com/0187773933/encryption/v1/encryption"
 	// utils "github.com/0187773933/Logger/v1/utils"
 	logrus "github.com/sirupsen/logrus"
 	// ulid "github.com/oklog/ulid/v2"
@@ -17,6 +19,27 @@ import (
 var Log *logrus.Logger
 var Config *types.ConfigFile
 var Location *time.Location
+var DB *bolt_api.DB
+var LogKeyBytes []byte
+var Encrypting bool
+
+func FormatTime( input_time *time.Time ) ( result string ) {
+	time_object := input_time.In( Location )
+	month_name := strings.ToUpper( time_object.Format( "Jan" ) )
+	milliseconds := time_object.Format( ".000" )
+	date_part := fmt.Sprintf( "%02d%s%d" , time_object.Day() , month_name , time_object.Year() )
+	time_part := fmt.Sprintf( "%02d:%02d:%02d%s" , time_object.Hour() , time_object.Minute() , time_object.Second() , milliseconds )
+	result = fmt.Sprintf( "%s === %s" , date_part , time_part )
+	return
+}
+
+// https://github.com/boltdb/bolt#autoincrementing-integer-for-the-bucket
+// itob returns an 8-byte big endian representation of v.
+func itob( v uint64 ) []byte {
+    b := make( []byte , 8 )
+    binary.BigEndian.PutUint64( b , uint64( v ) )
+    return b
+}
 
 type CustomTextFormatter struct {
 	logrus.TextFormatter
@@ -28,6 +51,13 @@ type CustomLogrusWriter struct {
 
 type CustomJSONFormatter struct {
 	logrus.JSONFormatter
+}
+
+func ( f *CustomJSONFormatter ) Format( entry *logrus.Entry ) ( []byte , error ) {
+	time_string := FormatTime( &entry.Time )
+	fmt.Println( time_string )
+	fmt.Println( entry )
+	return f.JSONFormatter.Format( entry )
 }
 
 // https://github.com/sirupsen/logrus/blob/v1.9.3/entry.go#L44
@@ -93,25 +123,23 @@ func ( f *CustomTextFormatter ) Format( entry *logrus.Entry ) ( result_bytes []b
 
 func ( w *CustomLogrusWriter ) Write( p []byte ) ( n int , err error ) {
 	message := string( p )
+	// db_result := DB.Update( func( tx *bolt_api.Tx ) error {
+	DB.Update( func( tx *bolt_api.Tx ) error {
+		uuid_bucket := tx.Bucket( LogKeyBytes )
+		sequence_id  , _ := uuid_bucket.NextSequence()
+		sequence_id_b := itob( sequence_id )
+		// fmt.Println( "next sequence id" , sequence_id )
+		if Encrypting {
+			p_e := encryption.ChaChaEncryptBytes( Config.EncryptionKey , p )
+			uuid_bucket.Put( sequence_id_b , p_e )
+		} else {
+			uuid_bucket.Put( sequence_id_b , p )
+		}
+		return nil
+	})
+	// fmt.Println( db_result )
 	n , err = fmt.Fprint( os.Stdout , message )
 	return n , err
-}
-
-func ( f *CustomJSONFormatter ) Format( entry *logrus.Entry ) ( []byte , error ) {
-	time_string := FormatTime( &entry.Time )
-	fmt.Println( time_string )
-	fmt.Println( entry )
-	return f.JSONFormatter.Format( entry )
-}
-
-func FormatTime( input_time *time.Time ) ( result string ) {
-	time_object := input_time.In( Location )
-	month_name := strings.ToUpper( time_object.Format( "Jan" ) )
-	milliseconds := time_object.Format( ".000" )
-	date_part := fmt.Sprintf( "%02d%s%d" , time_object.Day() , month_name , time_object.Year() )
-	time_part := fmt.Sprintf( "%02d:%02d:%02d%s" , time_object.Hour() , time_object.Minute() , time_object.Second() , milliseconds )
-	result = fmt.Sprintf( "%s === %s" , date_part , time_part )
-	return
 }
 
 // so apparently The limitation arises due to the Go language's initialization order:
@@ -125,12 +153,58 @@ func New( config *types.ConfigFile ) *logrus.Logger {
 	return Log
 }
 
+func CloseDB() {
+	if DB != nil {
+		err := DB.Close()
+		if err != nil {
+			Log.Fatalf( "Failed to close database: %v" , err )
+		}
+	}
+}
+
+func GetMessages( count int ) ( messages []string ) {
+	DB.View( func( tx *bolt_api.Tx ) error {
+		uuid_bucket := tx.Bucket( LogKeyBytes )
+		if uuid_bucket == nil {
+			return fmt.Errorf( "Bucket not found" )
+		}
+		c := uuid_bucket.Cursor()
+		// Iterate in reverse order
+		for k , v := c.Last(); k != nil && count > 0; k, v = c.Prev() {
+			if Encrypting {
+				decrytped_message := encryption.ChaChaDecryptBytes( Config.EncryptionKey , v )
+				messages = append( messages , string( decrytped_message ) )
+			} else {
+				messages = append( messages , string( v ) )
+			}
+			count--
+		}
+		return nil
+	})
+	// Reverse the slice to return messages in the original order
+	// for i, j := 0, len( messages ) - 1; i < j; i , j = i + 1, j - 1 {
+	// 	messages[ i ] , messages[ j ] = messages[ j ] , messages[ i ]
+	// }
+	return
+}
+
 func Init() {
 	if Log != nil { return }
 	Log = logrus.New()
 	Location , _ = time.LoadLocation( Config.TimeZone )
+	LogKeyBytes = []byte( Config.LogKey )
+	DB , _ = bolt_api.Open( Config.BoltDBPath , 0600 , &bolt_api.Options{ Timeout: ( 3 * time.Second ) } )
+	DB.Update( func( tx *bolt_api.Tx ) error {
+		tx.CreateBucketIfNotExists( LogKeyBytes )
+		return nil
+	})
+	if Config.EncryptionKey != "" {
+		Encrypting = true
+	} else {
+		Encrypting = false
+	}
 	// log_level := os.Getenv( "LOG_LEVEL" )
-	fmt.Printf( "LOG_LEVEL=%s\n" , Config.LogLevel )
+	// fmt.Printf( "LOG_LEVEL=%s\n" , Config.LogLevel )
 	switch Config.LogLevel {
 		case "debug":
 			Log.SetReportCaller( true )

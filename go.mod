@@ -4,6 +4,7 @@ go 1.22.2
 
 require (
 	github.com/0187773933/encryption v1.0.11
+	github.com/boltdb/bolt v1.3.1
 	github.com/gofiber/fiber/v2 v2.52.4
 	github.com/sirupsen/logrus v1.9.3
 	golang.org/x/crypto v0.17.0

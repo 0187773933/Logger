@@ -26,4 +26,5 @@ type ConfigFile struct {
 	BoltDBPath string `yaml:"bolt_db_path"`
 	EncryptionKey string `yaml:"encryption_key"`
 	LogLevel string `yaml:"log_level"`
+	LogKey string `yaml:"log_key"`
 }

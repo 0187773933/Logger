@@ -19,10 +19,10 @@ func SetupCloseHandler() {
 	go func() {
 		<-c
 		logger.Log.Println( "\r- Ctrl+C pressed in Terminal" )
-		fmt.Println( "\r" )
-		logger.Log.Println( "Ctrl+C pressed in Terminal" )
+		// fmt.Println( "\r" )
 		logger.Log.Printf( "Shutting Down %s Server" , s.Config.ServerName )
 		s.FiberApp.Shutdown()
+		logger.CloseDB()
 		os.Exit( 0 )
 	}()
 }

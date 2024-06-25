@@ -178,14 +178,16 @@ func GetMessages( count int ) ( messages []string ) {
 		}
 		c := uuid_bucket.Cursor()
 		// Iterate in reverse order
-		for k , v := c.Last(); k != nil && count > 0; k, v = c.Prev() {
+		for k , v := c.Last(); k != nil && ( count != 0 ); k, v = c.Prev() {
 			if Encrypting {
 				decrytped_message := encryption.ChaChaDecryptBytes( Config.EncryptionKey , v )
 				messages = append( messages , string( decrytped_message ) )
 			} else {
 				messages = append( messages , string( v ) )
 			}
-			count--
+			if count > 0 {
+				count--
+			}
 		}
 		return nil
 	})
@@ -201,7 +203,9 @@ func Init() {
 	Log = logrus.New()
 	Location , _ = time.LoadLocation( Config.TimeZone )
 	LogKeyBytes = []byte( Config.LogKey )
-	DB , _ = bolt_api.Open( Config.BoltDBPath , 0600 , &bolt_api.Options{ Timeout: ( 3 * time.Second ) } )
+	db , db_open_error := bolt_api.Open( Config.BoltDBPath , 0600 , &bolt_api.Options{ Timeout: ( 3 * time.Second ) } )
+	if db_open_error != nil { Log.Fatalf( "Failed to open database: %v" , db_open_error ); }
+	DB = db
 	DB.Update( func( tx *bolt_api.Tx ) error {
 		tx.CreateBucketIfNotExists( LogKeyBytes )
 		return nil

@@ -168,5 +168,5 @@ func ( s *Server ) SetupPublicRoutes() {
 	s.FiberApp.Get( "/" , PublicLimter , s.RenderHomePage )
 	s.FiberApp.Get( fmt.Sprintf( "/%s/%s" , s.Config.ServerUrlPrefix , s.Config.ServerLoginUrlPrefix ) , PublicLimter , s.RenderLoginPage )
 	s.FiberApp.Post( fmt.Sprintf( "/%s/%s" , s.Config.ServerUrlPrefix , s.Config.ServerLoginUrlPrefix ) , PublicLimter , s.HandleLogin )
-	s.FiberApp.Get( fmt.Sprintf( "/%s/logout" , s.Config.ServerUrlPrefix , s.Config.ServerLoginUrlPrefix ) , PublicLimter , s.HandleLogout )
+	s.FiberApp.Get( fmt.Sprintf( "/%s/logout" , s.Config.ServerUrlPrefix ) , PublicLimter , s.HandleLogout )
 }

@@ -16,12 +16,17 @@ import (
 	// ulid "github.com/oklog/ulid/v2"
 )
 
-var Log *logrus.Logger
+// var Log *logrus.Logger
+var Log *Wrapper
 var Config *types.ConfigFile
 var Location *time.Location
 var DB *bolt_api.DB
 var LogKeyBytes []byte
 var Encrypting bool
+
+type Wrapper struct {
+	*logrus.Logger
+}
 
 func FormatTime( input_time *time.Time ) ( result string ) {
 	time_object := input_time.In( Location )
@@ -142,12 +147,42 @@ func ( w *CustomLogrusWriter ) Write( p []byte ) ( n int , err error ) {
 	return n , err
 }
 
+func ( w *Wrapper ) GetFormattedTimeString() ( result string ) {
+	time_object := time.Now().In( Location )
+	month_name := strings.ToUpper( time_object.Format( "Jan" ) )
+	milliseconds := time_object.Format( ".000" )
+	date_part := fmt.Sprintf( "%02d%s%d" , time_object.Day() , month_name , time_object.Year() )
+	time_part := fmt.Sprintf( "%02d:%02d:%02d%s" , time_object.Hour() , time_object.Minute() , time_object.Second() , milliseconds )
+	result = fmt.Sprintf( "%s === %s" , date_part , time_part )
+	return
+}
+
+func ( w *Wrapper ) GetFormattedTimeStringOBJ() ( result_string string , result_time time.Time ) {
+	result_time = time.Now().In( Location )
+	month_name := strings.ToUpper( result_time.Format( "Jan" ) )
+	milliseconds := result_time.Format( ".000" )
+	date_part := fmt.Sprintf( "%02d%s%d" , result_time.Day() , month_name , result_time.Year() )
+	time_part := fmt.Sprintf( "%02d:%02d:%02d%s" , result_time.Hour() , result_time.Minute() , result_time.Second() , milliseconds )
+	result_string = fmt.Sprintf( "%s === %s" , date_part , time_part )
+	return
+}
+
+func ( w *Wrapper ) FormatTime( input_time *time.Time ) ( result string ) {
+	time_object := input_time.In( Location )
+	month_name := strings.ToUpper( time_object.Format( "Jan" ) )
+	milliseconds := time_object.Format( ".000" )
+	date_part := fmt.Sprintf( "%02d%s%d" , time_object.Day() , month_name , time_object.Year() )
+	time_part := fmt.Sprintf( "%02d:%02d:%02d%s" , time_object.Hour() , time_object.Minute() , time_object.Second() , milliseconds )
+	result = fmt.Sprintf( "%s === %s" , date_part , time_part )
+	return
+}
+
 // so apparently The limitation arises due to the Go language's initialization order:
 // Package-level variables are initialized before main() is called.
 // Functions in main() execute after package-level initializations.
 // something something , singleton
 // func GetLogger( config *types.ConfigFile ) *logrus.Logger {
-func New( config *types.ConfigFile ) *logrus.Logger {
+func New( config *types.ConfigFile ) *Wrapper {
 	Config = config
 	if Log == nil { Init() }
 	return Log
@@ -200,7 +235,8 @@ func GetMessages( count int ) ( messages []string ) {
 
 func Init() {
 	if Log != nil { return }
-	Log = logrus.New()
+	// Log = logrus.New()
+	Log = &Wrapper{logrus.New()}
 	Location , _ = time.LoadLocation( Config.TimeZone )
 	LogKeyBytes = []byte( Config.LogKey )
 	db , db_open_error := bolt_api.Open( Config.BoltDBPath , 0600 , &bolt_api.Options{ Timeout: ( 3 * time.Second ) } )

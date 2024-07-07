@@ -19,3 +19,7 @@ func main() {
 	log.Debug( "asdf" )
 }
 ```
+
+```
+webpack --config webpack.config.js
+```

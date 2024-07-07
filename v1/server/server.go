@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 	"strings"
-	logrus "github.com/sirupsen/logrus"
+	// logrus "github.com/sirupsen/logrus"
 	logger "github.com/0187773933/Logger/v1/logger"
 	types "github.com/0187773933/Logger/v1/types"
 	utils "github.com/0187773933/Logger/v1/utils"
@@ -21,7 +21,7 @@ type Server struct {
 	Location *time.Location `yaml:"-"`
 }
 
-var log *logrus.Logger
+var log *logger.Wrapper
 
 func ( s *Server ) LogRequest( context *fiber.Ctx ) ( error ) {
 	ip_address := context.Get( "x-forwarded-for" )
@@ -63,6 +63,8 @@ func ( s *Server ) Start() {
 	}
 	listen_address := fmt.Sprintf( ":%s" , s.Config.ServerPort )
 	log.Info( fmt.Sprintf( "Listening @ %s" , listen_address ) )
+	test := log.GetFormattedTimeString()
+	fmt.Println( "test" , test )
 	s.FiberApp.Listen( listen_address )
 }
 

@@ -143,7 +143,8 @@ func ( w *CustomLogrusWriter ) Write( p []byte ) ( n int , err error ) {
 		return nil
 	})
 	// fmt.Println( db_result )
-	n , err = fmt.Fprint( os.Stdout , message )
+	n_message := message + "\n"
+	n , err = fmt.Fprint( os.Stdout , n_message )
 	return n , err
 }
 

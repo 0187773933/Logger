@@ -205,7 +205,7 @@ func GetDB() ( *bolt_api.DB ) {
 	}
 }
 
-func GetMessages( count int ) ( messages []string ) {
+func ( w *Wrapper ) GetMessages( count int ) ( messages []string ) {
 	DB.View( func( tx *bolt_api.Tx ) error {
 		uuid_bucket := tx.Bucket( LogKeyBytes )
 		if uuid_bucket == nil {

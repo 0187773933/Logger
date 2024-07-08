@@ -32,7 +32,7 @@ func ( s *Server ) GetLogMessages( c *fiber.Ctx ) ( error ) {
 	if key == "" { key = s.Config.LogKey }
 	count := c.Params( "count" )
 	count_int , _ := strconv.Atoi( count )
-	messages := logger.GetMessages( count_int )
+	messages := log.GetMessages( count_int )
 	return c.JSON( fiber.Map{
 		"result": true ,
 		"url": "/log/:count" ,

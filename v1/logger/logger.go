@@ -86,9 +86,9 @@ func ( f *CustomTextFormatter ) Format( entry *logrus.Entry ) ( result_bytes []b
         } else {
             caller_function = entry.Caller.Function
         }
-		result_string = fmt.Sprintf( "%s === %s():%d === %s\n" , time_string , caller_function , entry.Caller.Line , entry.Message )
+		result_string = fmt.Sprintf( "%s === %s():%d === %s" , time_string , caller_function , entry.Caller.Line , entry.Message )
 	} else {
-		result_string = fmt.Sprintf( "%s === %s\n" , time_string , entry.Message )
+		result_string = fmt.Sprintf( "%s === %s" , time_string , entry.Message )
 	}
 	result_bytes = []byte( result_string )
 	result_error = nil

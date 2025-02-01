@@ -23,7 +23,7 @@ var ZoneInfoFS embed.FS
 // var Log *logrus.Logger
 var Log *Wrapper
 var Config *types.ConfigFile
-var Location *time.Location
+var Location = Get_Set_Location( "America/New_York" )
 var DB *bolt_api.DB
 var LogKeyBytes []byte
 var Encrypting bool
@@ -44,6 +44,16 @@ func SetLocation( location_string string ) {
 	if err != nil { panic( err ) }
 	Location = loc
 	fmt.Println( "location set to: " , location_string )
+}
+
+func Get_Set_Location( location_string string ) ( *time.Location ) {
+	if location_string == "" { location_string = "America/New_York" }
+	bs , err := ZoneInfoFS.ReadFile( "zoneinfo/" + location_string )
+	if err != nil { panic( err ) }
+	loc , err := time.LoadLocationFromTZData( location_string , bs )
+	if err != nil { panic( err ) }
+	fmt.Println( "location set to: " , location_string )
+	return loc
 }
 
 func FormatTime( input_time *time.Time ) ( result string ) {

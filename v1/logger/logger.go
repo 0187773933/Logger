@@ -3,6 +3,7 @@ package logger
 import (
 	"os"
 	"fmt"
+	"embed"
 	"strings"
 	"io"
 	"time"
@@ -16,6 +17,9 @@ import (
 	// ulid "github.com/oklog/ulid/v2"
 )
 
+//go:embed zoneinfo
+var ZoneInfoFS embed.FS
+
 // var Log *logrus.Logger
 var Log *Wrapper
 var Config *types.ConfigFile
@@ -26,6 +30,20 @@ var Encrypting bool
 
 type Wrapper struct {
 	*logrus.Logger
+}
+
+func Get_location( name string ) ( *time.Location ) {
+	return Location
+}
+
+func SetLocation( location_string string ) {
+	if location_string == "" { location_string = "America/New_York" }
+	bs , err := ZoneInfoFS.ReadFile( "zoneinfo/" + location_string )
+	if err != nil { panic( err ) }
+	loc , err := time.LoadLocationFromTZData( location_string , bs )
+	if err != nil { panic( err ) }
+	Location = loc
+	fmt.Println( "location set to: " , location_string )
 }
 
 func FormatTime( input_time *time.Time ) ( result string ) {

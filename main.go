@@ -43,6 +43,10 @@ func main() {
 	fmt.Println( config_file_path , config )
 	s = server.New( &config )
 	logger.Log.Printf( "Loaded Config File From : %s" , config_file_path )
+	if config.TimeZone == "" {
+		config.TimeZone = "America/New_York"
+	}
+	logger.SetLocation( config.TimeZone )
 	SetupCloseHandler()
 	s.Start()
 }

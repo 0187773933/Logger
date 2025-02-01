@@ -254,6 +254,9 @@ func ( w *Wrapper ) GetMessages( count int ) ( messages []string ) {
 
 func Init() {
 	if Log != nil { return }
+	if Location == nil {
+		SetLocation( "America/New_York" )
+	}
 	// Log = logrus.New()
 	Log = &Wrapper{logrus.New()}
 	Location , _ = time.LoadLocation( Config.TimeZone )

@@ -199,6 +199,39 @@ func ( w *Wrapper ) GetFormattedTimeStringOBJ() ( result_string string , result_
 	return
 }
 
+func ( w *Wrapper ) GetNowTimeOBJ() ( result time.Time ) {
+	result = time.Now().In( Location )
+	return
+}
+
+func GetNowDateString() ( result string ) {
+	now := time.Now().In( Location )
+	month_name := strings.ToUpper( now.Format( "Jan" ) )
+	result = fmt.Sprintf( "%02d%s%d" , now.Day() , month_name , now.Year() )
+	return
+}
+
+func FormatDateString( now *time.Time ) ( result string ) {
+	now_here := now.In( Location )
+	month_name := strings.ToUpper( now_here.Format( "Jan" ) )
+	result = fmt.Sprintf( "%02d%s%d" , now_here.Day() , month_name , now_here.Year() )
+	return
+}
+
+func GetNowTimeString() ( result string ) {
+	now := time.Now().In( Location )
+	milliseconds := now.Format( ".000" )
+	result = fmt.Sprintf( "%02d:%02d:%02d%s" , now.Hour() , now.Minute() , now.Second() , milliseconds )
+	return
+}
+
+func FormatTimeString( now *time.Time ) ( result string ) {
+	now_here := now.In( Location )
+	milliseconds := now_here.Format( ".000" )
+	result = fmt.Sprintf( "%02d:%02d:%02d%s" , now_here.Hour() , now_here.Minute() , now_here.Second() , milliseconds )
+	return
+}
+
 func ( w *Wrapper ) FormatTime( input_time *time.Time ) ( result string ) {
 	time_object := input_time.In( Location )
 	month_name := strings.ToUpper( time_object.Format( "Jan" ) )
